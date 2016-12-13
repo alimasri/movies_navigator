@@ -103,7 +103,10 @@ class Cli(Cmd):
     def do_cls(self, line):
         """cls
         Clears the screen"""
-        os.system("cls")
+        if sys.platform.startswith("win"):
+            os.system("cls")
+        else:
+            os.system("clear")
 
     def do_exit(self, line):
         """exit
