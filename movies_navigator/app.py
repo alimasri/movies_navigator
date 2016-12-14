@@ -44,11 +44,11 @@ class Filter:
 
     @staticmethod
     def by_rating(movies, rating):
-        return filter(lambda movie: float(movie.rating) >= rating, movies)
+        return list(filter(lambda movie: float(movie.rating) >= rating, movies))
 
     @staticmethod
     def by_rating_and_type(movies, rating, _type):
-        return filter(lambda movie: float(movie.rating) >= rating and movie.type == _type, movies)
+        return list(filter(lambda movie: float(movie.rating) >= rating and movie.type == _type, movies))
 
     @staticmethod
     def by_type(movies, _type):
@@ -57,7 +57,7 @@ class Filter:
     @staticmethod
     def by_genre(movies, genres):
         genres = set(genres.split(","))
-        return filter(lambda movie: genres.issubset(movie.genres), movies)
+        return list(filter(lambda movie: genres.issubset(movie.genres), movies))
 
 
 class Cli(Cmd):
@@ -68,15 +68,15 @@ class Cli(Cmd):
     def do_title(self, movie_title):
         """title movie_title
         Searches a movie by title using fuzzy string matching"""
-        print_movies(Filter.by_title(self.all_movies, movie_title))
+        self.output = Filter.by_title(self.all_movies, movie_title)
 
     def do_list(self, _type):
         """list [type]
         List movies by type [seen, watchlist], list all if type is not specified"""
         if _type == "":
-            print_movies(self.all_movies)
+            self.output = self.all_movies
         else:
-            print_movies(Filter.by_type(self.all_movies, _type))
+            self.output = Filter.by_type(self.all_movies, _type)
 
     def do_rating(self, line):
         """rating rating_number [type]
@@ -84,21 +84,21 @@ class Cli(Cmd):
         tokens = line.split(" ")
         rating = int(tokens[0])
         if len(tokens) == 1:
-            print_movies(Filter.by_rating(self.all_movies, rating))
+            self.output = Filter.by_rating(self.all_movies, rating)
         else:
-            print_movies(Filter.by_rating_and_type(self.all_movies, rating, tokens[1]))
+            self.output = Filter.by_rating_and_type(self.all_movies, rating, tokens[1])
 
     def do_info(self, movie_id):
         """info movie_id
         Print movie information"""
         movie_id = int(movie_id)
         movie = get_movie_by_id(self.all_movies, movie_id)
-        print_movie_information(movie)
+        self.output = movie
 
     def do_genres(self, genres):
         """genre [genre1, genre2, ...]
         List movies by genres"""
-        print_movies(Filter.by_genre(self.all_movies, genres))
+        self.output = Filter.by_genre(self.all_movies, genres)
 
     def do_cls(self, line):
         """cls
@@ -112,6 +112,29 @@ class Cli(Cmd):
         """exit
         Exit the program"""
         return True
+
+    def do_pipe(self, args):
+        buffer = None
+        for arg in args:
+            s = arg
+            if buffer:
+                s += ' ' + buffer
+            self.onecmd(s)
+            buffer = self.output
+
+    def postcmd(self, stop, line):
+        if hasattr(self, 'output'):
+            if isinstance(self.output, list):
+                print_movies(self.output)
+            else:
+                print(self.output)
+            self.output = None
+        return stop
+
+    def parseline(self, line):
+        if '|' in line:
+            return 'pipe', line.split('|'), line
+        return Cmd.parseline(self, line)
 
 
 def main(args):
