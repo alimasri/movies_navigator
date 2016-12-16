@@ -13,7 +13,7 @@ if sys.version[0] == "3":
     raw_input = input
 
 
-def print_movie_information(movie):
+def get_movie_information(movie):
     return ('Title: {0}\n'
             'Year: {1}\n'
             'Release date: {2}\n'

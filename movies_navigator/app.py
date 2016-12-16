@@ -33,6 +33,18 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
+def parse_ls(args):
+    parser = argparse.ArgumentParser("ls")
+    parser.add_argument("-t", "--type", dest="type", help="movie type", choices=['seen', 'watchlist'],
+                        type=str)
+    parser.add_argument("--min-rating", dest="min_rating", help="the minimum rating of the movie", choices=range(0, 11),
+                        default=0, type=int)
+    parser.add_argument("--max-rating", dest="max_rating", help="the maximum rating of the movie", choices=range(0, 11),
+                        default=10, type=int)
+    parser.add_argument("-g", "--genres", dest="genres", help="the movie genres", nargs="*")
+    return parser.parse_args(args)
+
+
 class Filter:
     @staticmethod
     def by_title(movies, movie_title):
@@ -43,20 +55,18 @@ class Filter:
         return results
 
     @staticmethod
-    def by_rating(movies, rating):
-        return list(filter(lambda movie: float(movie.rating) >= rating, movies))
-
-    @staticmethod
-    def by_rating_and_type(movies, rating, _type):
-        return list(filter(lambda movie: float(movie.rating) >= rating and movie.type == _type, movies))
+    def by_rating(movies, min_rating, max_rating):
+        return list(
+            filter(lambda movie: min_rating <= float(movie.rating) <= max_rating, movies))
 
     @staticmethod
     def by_type(movies, _type):
-        return filter(lambda movie: movie.type == _type, movies)
+        return list(filter(lambda movie: movie.type == _type, movies))
 
     @staticmethod
     def by_genre(movies, genres):
-        genres = set(genres.split(","))
+        if genres is None:
+            return movies
         return list(filter(lambda movie: set(genres).issubset(set(movie.genres)), movies))
 
 
@@ -66,59 +76,58 @@ class Cli(Cmd):
         self.all_movies = all_movies
         self.seen_path = seen_path
         self.watchlist_path = watchlist_path
-        self.output = ""
 
-    def do_title(self, movie_title):
-        """title movie_title
+    def do_search(self, movie_title):
+        """search movie_title
         Searches a movie by title using fuzzy string matching"""
-        self.output = Filter.by_title(self.all_movies, movie_title)
+        print_movies(Filter.by_title(self.all_movies, movie_title))
 
-    def do_list(self, _type):
-        """list [type]
-        List movies by type [seen, watchlist], list all if type is not specified"""
-        if _type == "":
-            self.output = self.all_movies
-        else:
-            self.output = Filter.by_type(self.all_movies, _type)
+    def do_ls(self, line):
+        if line is not None and line != "":
+            line = line.strip()
+            line = line.split(" ")
+        try:
+            args = parse_ls(line)
+            _type = args.type or None
+            min_rating = args.min_rating
+            max_rating = args.max_rating
+            genres = args.genres
+            if _type is None:
+                movies = self.all_movies
+            else:
+                movies = Filter.by_type(self.all_movies, _type)
+            movies = Filter.by_rating(movies, min_rating, max_rating)
+            movies = Filter.by_genre(movies, genres)
+            print_movies(movies)
+        except Exception as e:
+            print(e)
+        except SystemExit:
+            pass
 
-    def do_rating(self, line):
-        """rating rating_number [type]
-        List movies by rating, movies can be filtered by type as well"""
-        tokens = line.split(" ")
-        rating = int(tokens[0])
-        if len(tokens) == 1:
-            self.output = Filter.by_rating(self.all_movies, rating)
-        else:
-            self.output = Filter.by_rating_and_type(self.all_movies, rating, tokens[1])
+    def help_ls(self):
+        print('run ls -h for detailed information')
 
     def do_info(self, movie_id):
         """info movie_id
         Print movie information"""
-        movie_id = int(movie_id)
-        movie = get_movie_by_id(self.all_movies, movie_id)
-        if movie is None:
-            self.output = ""
-        else:
-            self.output = print_movie_information(movie)
+        if movie_id is not None and movie_id.isdigit():
+            movie_id = int(movie_id)
+            movie = get_movie_by_id(self.all_movies, movie_id)
+            if movie is not None:
+                print(get_movie_information(movie))
 
-    def do_genres(self, genres):
-        """genres [genre1, genre2, ...]
-        List movies by genres"""
-        self.output = Filter.by_genre(self.all_movies, genres)
-
-    def do_move(self, movie_id):
-        """move movie_id
+    def do_mv(self, movie_id):
+        """mv movie_id
         Toggles the movie folder from seen to watchlist and vice-versa"""
         movie_id = int(movie_id)
         movie = get_movie_by_id(self.all_movies, movie_id)
         if movie is not None:
             try:
                 move_movie(movie, self.seen_path, self.watchlist_path)
-                self.output = "done!"
             except Exception as e:
-                self.output = "error!\n" + str(e)
+                print("error!\n" + str(e))
         else:
-            self.output = "No movie found!"
+            print("No movie found!")
 
     def do_cls(self, line):
         """cls
@@ -132,29 +141,6 @@ class Cli(Cmd):
         """exit
         Exit the program"""
         return True
-
-    def do_pipe(self, args):
-        buffer = None
-        for arg in args:
-            s = arg
-            if buffer:
-                s += ' ' + buffer
-            self.onecmd(s)
-            buffer = self.output
-
-    def postcmd(self, stop, line):
-        if hasattr(self, 'output'):
-            if isinstance(self.output, list):
-                print_movies(self.output)
-            else:
-                print(self.output)
-            self.output = None
-        return stop
-
-    def parseline(self, line):
-        if '|' in line:
-            return 'pipe', line.split('|'), line
-        return Cmd.parseline(self, line)
 
 
 def main(args):
