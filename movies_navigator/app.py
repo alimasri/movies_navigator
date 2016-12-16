@@ -74,7 +74,7 @@ class Filter:
 
 class Cli(Cmd):
     def __init__(self, all_movies, seen_path, watchlist_path):
-        super().__init__()
+        Cmd.__init__(self)
         self.all_movies = all_movies
         self.seen_path = seen_path
         self.watchlist_path = watchlist_path
