@@ -19,12 +19,14 @@ def parse_args(args):
         action='version',
         version='movies_navigator {ver}'.format(ver=__version__))
     parser.add_argument(
+        "-s",
         "--seen",
         dest="seen_path",
         help="seen movies directory",
         type=str
     )
     parser.add_argument(
+        "-w",
         "--watchlist",
         dest="watch_list_path",
         help="watch list movies directory",
