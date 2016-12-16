@@ -1,6 +1,8 @@
 import os
 import sys
 import shutil
+import platform
+import subprocess
 
 from imdbpie import Imdb
 
@@ -120,3 +122,12 @@ def move_movie(movie, seen_path, watchlist_path):
         movie.type = "watchlist" if movie.type == "seen" else "seen"
     except Exception as e:
         raise e
+
+
+def open_file(path):
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])

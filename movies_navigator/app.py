@@ -107,6 +107,15 @@ class Cli(Cmd):
     def help_ls(self):
         print('run ls -h for detailed information')
 
+    def do_open(self, movie_id):
+        """open movie_id
+        Opens the movie directory with the folder manager"""
+        if movie_id is not None and movie_id.isdigit():
+            movie_id = int(movie_id)
+            movie = get_movie_by_id(self.all_movies, movie_id)
+            if movie is not None:
+                open_file(os.path.abspath(movie.path))
+
     def do_info(self, movie_id):
         """info movie_id
         Print movie information"""
