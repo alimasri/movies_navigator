@@ -119,6 +119,9 @@ class Cli(Cmd):
     def do_mv(self, movie_id):
         """mv movie_id
         Toggles the movie folder from seen to watchlist and vice-versa"""
+        if self.seen_path is None or self.watchlist_path is None:
+            print("seen and/or watchlist path are/is undefined")
+            return
         movie_id = int(movie_id)
         movie = get_movie_by_id(self.all_movies, movie_id)
         if movie is not None:
