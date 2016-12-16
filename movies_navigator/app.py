@@ -57,13 +57,16 @@ class Filter:
     @staticmethod
     def by_genre(movies, genres):
         genres = set(genres.split(","))
-        return list(filter(lambda movie: genres.issubset(movie.genres), movies))
+        return list(filter(lambda movie: set(genres).issubset(set(movie.genres)), movies))
 
 
 class Cli(Cmd):
-    def __init__(self, all_movies):
+    def __init__(self, all_movies, seen_path, watchlist_path):
         super().__init__()
         self.all_movies = all_movies
+        self.seen_path = seen_path
+        self.watchlist_path = watchlist_path
+        self.output = ""
 
     def do_title(self, movie_title):
         """title movie_title
@@ -93,12 +96,29 @@ class Cli(Cmd):
         Print movie information"""
         movie_id = int(movie_id)
         movie = get_movie_by_id(self.all_movies, movie_id)
-        self.output = movie
+        if movie is None:
+            self.output = ""
+        else:
+            self.output = print_movie_information(movie)
 
     def do_genres(self, genres):
-        """genre [genre1, genre2, ...]
+        """genres [genre1, genre2, ...]
         List movies by genres"""
         self.output = Filter.by_genre(self.all_movies, genres)
+
+    def do_move(self, movie_id):
+        """move movie_id
+        Toggles the movie folder from seen to watchlist and vice-versa"""
+        movie_id = int(movie_id)
+        movie = get_movie_by_id(self.all_movies, movie_id)
+        if movie is not None:
+            try:
+                move_movie(movie, self.seen_path, self.watchlist_path)
+                self.output = "done!"
+            except Exception as e:
+                self.output = "error!\n" + str(e)
+        else:
+            self.output = "No movie found!"
 
     def do_cls(self, line):
         """cls
@@ -145,7 +165,7 @@ def main(args):
     all_movies = load_movies(seen_path, watch_list_path)
     print("Movies loaded successfully")
     print('Total number of movies: {0}'.format(len(all_movies)))
-    cli = Cli(all_movies)
+    cli = Cli(all_movies, seen_path, watch_list_path)
     cli.prompt = 'navigator> '
     cli.cmdloop()
 

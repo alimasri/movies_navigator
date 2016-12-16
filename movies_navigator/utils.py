@@ -1,6 +1,6 @@
 import os
-import re
 import sys
+import shutil
 
 from imdbpie import Imdb
 
@@ -14,15 +14,15 @@ if sys.version[0] == "3":
 
 
 def print_movie_information(movie):
-    print('Title: {0}\n'
-          'Year: {1}\n'
-          'Release date: {2}\n'
-          'Rating: {3}\n'
-          'Runtime: {4}\n'
-          'Genres: {5}\n'
-          'Plot summary: {6}'.format(movie.title, movie.year, movie.release_date, movie.rating,
-                                     print_time(movie.runtime), movie.genres,
-                                     movie.plot))
+    return ('Title: {0}\n'
+            'Year: {1}\n'
+            'Release date: {2}\n'
+            'Rating: {3}\n'
+            'Runtime: {4}\n'
+            'Genres: {5}\n'
+            'Plot summary: {6}'.format(movie.title, movie.year, movie.release_date, movie.rating,
+                                       print_time(movie.runtime), movie.genres,
+                                       movie.plot))
 
 
 def load_movies(seen_path, watchlist_path):
@@ -34,9 +34,10 @@ def load_movies(seen_path, watchlist_path):
                 movie = parse_info_file(os.path.join(seen_path, genre, movie_folder, INFO_FILE))
                 if movie is None:
                     continue
-                movie.genres = set(genre.split(","))
+                movie.genres = genre.split(",")
                 movie.type = "seen"
                 movie.id = _id
+                movie.path = os.path.join(seen_path, genre, movie_folder)
                 _id += 1
                 movies.append(movie)
     if watchlist_path is not None:
@@ -46,8 +47,9 @@ def load_movies(seen_path, watchlist_path):
                 if movie is None:
                     continue
                 movie.type = "watchlist"
-                movie.genres = set(genre.split(","))
+                movie.genres = genre.split(",")
                 movie.id = _id
+                movie.path = os.path.join(watchlist_path, genre, movie_folder)
                 _id += 1
                 movies.append(movie)
     return movies
@@ -100,3 +102,21 @@ def get_movie_by_id(movies, id):
         if movie.id == id:
             return movie
     return None
+
+
+def move_movie(movie, seen_path, watchlist_path):
+    if movie is None:
+        return
+    if movie.type == "seen":
+        destination_root = watchlist_path
+    elif movie.type == "watchlist":
+        destination_root = seen_path
+    else:
+        raise Exception("Unable to move - unknown movie type")
+    try:
+        destination_path = os.path.join(destination_root, ",".join(movie.genres), os.path.basename(movie.path))
+        shutil.move(movie.path, destination_path)
+        movie.path = destination_path
+        movie.type = "watchlist" if movie.type == "seen" else "seen"
+    except Exception as e:
+        raise e

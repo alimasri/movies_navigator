@@ -10,6 +10,7 @@ class Movie:
         self.plot = ""
         self.id = 0
         self.type = ""
+        self.path = ""
 
     def __repr__(self):
         return '[{0}] {1} - {2}, rating {3}, genres: {4}'.format(self.id, self.title, self.year, self.rating,
