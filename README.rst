@@ -33,7 +33,7 @@ This command will download and install the project with the required dependencie
 Usage
 =====
 
-
+To be updated soon...
 
 Note
 ====
