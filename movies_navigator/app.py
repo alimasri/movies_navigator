@@ -56,7 +56,7 @@ class Filter:
     def by_title(movies, movie_title):
         results = []
         for movie in movies:
-            if fuzz.ratio(movie.title, movie_title) > 60:
+            if fuzz.ratio(movie.title, movie_title) > 60 or movie_title in movie.title:
                 results.append(movie)
         return results
 
