@@ -157,6 +157,9 @@ class Cli(Cmd):
         else:
             print("No movie found!")
 
+    def do_reload(self):
+        self.all_movies = load_movies(self.seen_path, self.watchlist_path)
+
     def do_cls(self, line):
         """cls
         Clears the screen"""
