@@ -44,6 +44,10 @@ def parse_ls(args):
     parser.add_argument("--max-rating", dest="max_rating", help="the maximum rating of the movie", choices=range(0, 11),
                         default=10, type=int)
     parser.add_argument("-g", "--genres", dest="genres", help="the movie genres", nargs="*")
+    parser.add_argument("--min-year", dest="min_year", help="the minimum release year of the movie", default=0,
+                        type=int)
+    parser.add_argument("--max-year", dest="max_year", help="the maximum release year of the movie", default=9999,
+                        type=int)
     return parser.parse_args(args)
 
 
@@ -57,7 +61,7 @@ class Filter:
         return results
 
     @staticmethod
-    def by_rating(movies, min_rating, max_rating):
+    def by_rating(movies, min_rating=0, max_rating=10):
         return list(
             filter(lambda movie: min_rating <= float(movie.rating) <= max_rating, movies))
 
@@ -70,6 +74,10 @@ class Filter:
         if genres is None:
             return movies
         return list(filter(lambda movie: set(genres).issubset(set(movie.genres)), movies))
+
+    @staticmethod
+    def by_year(movies, min_year=0, max_year=9999):
+        return list(filter(lambda movie: min_year <= movie.year <= max_year, movies))
 
 
 class Cli(Cmd):
@@ -93,13 +101,19 @@ class Cli(Cmd):
             _type = args.type or None
             min_rating = args.min_rating
             max_rating = args.max_rating
+            min_year = args.min_year
+            max_year = args.max_year
             genres = args.genres
             if _type is None:
                 movies = self.all_movies
             else:
                 movies = Filter.by_type(self.all_movies, _type)
-            movies = Filter.by_rating(movies, min_rating, max_rating)
-            movies = Filter.by_genre(movies, genres)
+            if min_year is not None or max_year is not None:
+                movies = Filter.by_year(movies, min_year, max_year)
+            if min_rating is not None or max_rating is not None:
+                movies = Filter.by_rating(movies, min_rating, max_rating)
+            if genres is not None:
+                movies = Filter.by_genre(movies, genres)
             print_movies(movies)
         except Exception as e:
             print(e)

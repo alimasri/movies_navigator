@@ -79,11 +79,11 @@ def parse_info_file(info):
             if key.startswith('title'):
                 movie.title = value
             elif key.startswith('year'):
-                movie.year = value
+                movie.year = int(value)
             elif key.startswith('release date'):
                 movie.release_date = value
             elif key.startswith('rating'):
-                movie.rating = value
+                movie.rating = float(value)
             elif key.startswith('runtime'):
                 movie.runtime = value
             elif key.startswith('plot'):
