@@ -48,6 +48,8 @@ def parse_ls(args):
                         type=int)
     parser.add_argument("--max-year", dest="max_year", help="the maximum release year of the movie", default=9999,
                         type=int)
+    parser.add_argument("--sort-by", dest="sort_by", help="choose the order of the movies",
+                        choices=["year", "rating", "title", "id", ""], type=str)
     return parser.parse_args(args)
 
 
@@ -104,6 +106,7 @@ class Cli(Cmd):
             min_year = args.min_year
             max_year = args.max_year
             genres = args.genres
+            sort_by = args.sort_by
             if _type is None:
                 movies = self.all_movies
             else:
@@ -114,6 +117,8 @@ class Cli(Cmd):
                 movies = Filter.by_rating(movies, min_rating, max_rating)
             if genres is not None:
                 movies = Filter.by_genre(movies, genres)
+            if sort_by is not None:
+                movies = sorted(movies, key=lambda movie: getattr(movie, sort_by))
             print_movies(movies)
         except Exception as e:
             print(e)
@@ -158,6 +163,8 @@ class Cli(Cmd):
             print("No movie found!")
 
     def do_reload(self, line):
+        """reload
+        Reloads the movie list from the directories"""
         self.all_movies = load_movies(self.seen_path, self.watchlist_path)
 
     def do_cls(self, line):
