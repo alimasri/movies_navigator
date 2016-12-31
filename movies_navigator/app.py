@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import argparse
-from fuzzywuzzy import fuzz
+import warnings
 from movies_navigator.utils import *
 from movies_navigator import __version__
 from cmd import Cmd
 
+warnings.simplefilter('ignore', UserWarning)
+from fuzzywuzzy import fuzz
+
 __author__ = "Ali Masri"
 __copyright__ = "Ali Masri"
 __license__ = "MIT"
+
+FILE_NAME = "DATA"
 
 
 def parse_args(args):
@@ -166,6 +171,7 @@ class Cli(Cmd):
         """reload
         Reloads the movie list from the directories"""
         self.all_movies = load_movies(self.seen_path, self.watchlist_path)
+        persist_object(FILE_NAME, self.all_movies)
 
     def do_cls(self, line):
         """cls
@@ -186,8 +192,13 @@ def main(args):
     seen_path = args.seen_path
     watch_list_path = args.watch_list_path
     print("Loading movies...")
-    all_movies = load_movies(seen_path, watch_list_path)
-    print("Movies loaded successfully")
+    all_movies = load_object(FILE_NAME)
+    if all_movies is None:
+        all_movies = load_movies(seen_path, watch_list_path)
+        persist_object(FILE_NAME, all_movies)
+        print("Movies loaded successfully")
+    else:
+        print("Movies loaded from previous data - use 'reload' command to refresh")
     print('Total number of movies: {0}'.format(len(all_movies)))
     cli = Cli(all_movies, seen_path, watch_list_path)
     cli.prompt = 'navigator> '

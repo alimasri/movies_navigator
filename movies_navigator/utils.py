@@ -3,6 +3,7 @@ import sys
 import shutil
 import platform
 import subprocess
+import pickle
 
 from imdbpie import Imdb
 
@@ -131,3 +132,21 @@ def open_file(path):
         subprocess.Popen(["open", path])
     else:
         subprocess.Popen(["xdg-open", path])
+
+
+def persist_object(file_name, obj):
+    try:
+        with open(file_name, 'wb') as f:
+            pickle.dump(obj, f)
+    except Exception as e:
+        print(e)
+
+
+def load_object(file_name):
+    obj = None
+    try:
+        with open(file_name, 'rb') as f:
+            obj = pickle.load(f)
+    except:
+        pass
+    return obj
