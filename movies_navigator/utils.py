@@ -9,6 +9,10 @@ from imdbpie import Imdb
 
 from movies_navigator.movie import Movie
 
+from colorama import init, Fore
+
+init(autoreset=True)
+
 imdb = Imdb()
 INFO_FILE = "info.txt"
 
@@ -97,7 +101,11 @@ def parse_info_file(info):
 
 def print_movies(movies):
     for movie in movies:
-        print(movie)
+        info = str(movie)
+        if movie.type == 'seen':
+            print(Fore.RED + info)
+        else:
+            print(Fore.GREEN + info)
 
 
 def get_movie_by_id(movies, id):
