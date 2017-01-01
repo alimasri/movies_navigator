@@ -162,6 +162,7 @@ class Cli(Cmd):
         if movie is not None:
             try:
                 move_movie(movie, self.seen_path, self.watchlist_path)
+                persist_object(FILE_NAME, self.all_movies)
             except Exception as e:
                 print("error!\n" + str(e))
         else:
