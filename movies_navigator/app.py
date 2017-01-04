@@ -13,13 +13,12 @@ __author__ = "Ali Masri"
 __copyright__ = "Ali Masri"
 __license__ = "MIT"
 
-FILE_NAME = "DATA"
-
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
         description="Movies navigator")
     parser.add_argument(
+        "-v",
         '--version',
         action='version',
         version='movies_navigator {ver}'.format(ver=__version__))
@@ -35,6 +34,13 @@ def parse_args(args):
         "--watchlist",
         dest="watch_list_path",
         help="watch list movies directory",
+        type=str
+    )
+    parser.add_argument(
+        "-d",
+        "--data-file",
+        dest="data_file",
+        help="data file path to store parsed movie information",
         type=str
     )
     return parser.parse_args(args)
@@ -88,11 +94,12 @@ class Filter:
 
 
 class Cli(Cmd):
-    def __init__(self, all_movies, seen_path, watchlist_path):
+    def __init__(self, all_movies, seen_path, watchlist_path, data_file):
         Cmd.__init__(self)
         self.all_movies = all_movies
         self.seen_path = seen_path
         self.watchlist_path = watchlist_path
+        self.data_file = data_file
 
     def do_search(self, movie_title):
         """search movie_title
@@ -162,7 +169,7 @@ class Cli(Cmd):
         if movie is not None:
             try:
                 move_movie(movie, self.seen_path, self.watchlist_path)
-                persist_object(FILE_NAME, self.all_movies)
+                persist_object(self.data_file, self.all_movies)
             except Exception as e:
                 print("error!\n" + str(e))
         else:
@@ -172,7 +179,7 @@ class Cli(Cmd):
         """reload
         Reloads the movie list from the directories"""
         self.all_movies = load_movies(self.seen_path, self.watchlist_path)
-        persist_object(FILE_NAME, self.all_movies)
+        persist_object(self.data_file, self.all_movies)
 
     def do_cls(self, line):
         """cls
@@ -192,16 +199,21 @@ def main(args):
     args = parse_args(args)
     seen_path = args.seen_path
     watch_list_path = args.watch_list_path
+    data_file = args.data_file or "movies_navigator.data"
     print("Loading movies...")
-    all_movies = load_object(FILE_NAME)
+    all_movies = load_object(data_file)
     if all_movies is None:
-        all_movies = load_movies(seen_path, watch_list_path)
-        persist_object(FILE_NAME, all_movies)
+        try:
+            all_movies = load_movies(seen_path, watch_list_path)
+        except FileNotFoundError:
+            print("Error - Please make sure that the directories you specified actually exit")
+            return
+        persist_object(data_file, all_movies)
         print("Movies loaded successfully")
     else:
         print("Movies loaded from previous data - use 'reload' command to refresh")
     print('Total number of movies: {0}'.format(len(all_movies)))
-    cli = Cli(all_movies, seen_path, watch_list_path)
+    cli = Cli(all_movies, seen_path, watch_list_path, data_file)
     cli.prompt = 'navigator> '
     cli.cmdloop()
 
