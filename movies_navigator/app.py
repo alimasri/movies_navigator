@@ -147,7 +147,11 @@ class Cli(Cmd):
             movie_id = int(movie_id)
             movie = get_movie_by_id(self.all_movies, movie_id)
             if movie is not None:
-                open_file(os.path.abspath(movie.path))
+                movie_path = os.path.abspath(movie.path)
+                try:
+                    open_file(movie_path)
+                except:
+                    print('Folder not found: ' + movie_path)
 
     def do_info(self, movie_id):
         """info movie_id
