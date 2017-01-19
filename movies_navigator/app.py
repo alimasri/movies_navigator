@@ -182,8 +182,11 @@ class Cli(Cmd):
     def do_reload(self, line):
         """reload
         Reloads the movie list from the directories"""
-        self.all_movies = load_movies(self.seen_path, self.watchlist_path)
-        persist_object(self.data_file, self.all_movies)
+        try:
+            self.all_movies = load_movies(self.seen_path, self.watchlist_path)
+            persist_object(self.data_file, self.all_movies)
+        except FileNotFoundError:
+            print("Error - Please make sure that the directories you specified actually exist")
 
     def do_cls(self, line):
         """cls
@@ -210,7 +213,7 @@ def main(args):
         try:
             all_movies = load_movies(seen_path, watch_list_path)
         except FileNotFoundError:
-            print("Error - Please make sure that the directories you specified actually exit")
+            print("Error - Please make sure that the directories you specified actually exist")
             return
         persist_object(data_file, all_movies)
         print("Movies loaded successfully")
