@@ -39,9 +39,13 @@ def load_movies(seen_path, watchlist_path):
             and \
             (watchlist_path is not None and not os.path.isdir(watchlist_path)):
         raise FileNotFoundError
-    if seen_path is not None:
+    if seen_path is not None and os.path.isdir(seen_path):
         for genre in os.listdir(seen_path):
-            for movie_folder in os.listdir(os.path.join(seen_path, genre)):
+            genre_path = os.path.join(seen_path, genre)
+            # skip non dir files
+            if not os.path.isdir(genre_path):
+                continue
+            for movie_folder in os.listdir(genre_path):
                 movie = parse_info_file(os.path.join(seen_path, genre, movie_folder, INFO_FILE))
                 if movie is None:
                     continue
@@ -51,9 +55,13 @@ def load_movies(seen_path, watchlist_path):
                 movie.path = os.path.join(seen_path, genre, movie_folder)
                 _id += 1
                 movies.append(movie)
-    if watchlist_path is not None:
+    if watchlist_path is not None and os.path.isdir(watchlist_path):
         for genre in os.listdir(watchlist_path):
-            for movie_folder in os.listdir(os.path.join(watchlist_path, genre)):
+            genre_path = os.path.join(watchlist_path, genre)
+            # skip non dir files
+            if not os.path.isdir(genre_path):
+                continue
+            for movie_folder in os.listdir(genre_path):
                 movie = parse_info_file(os.path.join(watchlist_path, genre, movie_folder, INFO_FILE))
                 if movie is None:
                     continue
