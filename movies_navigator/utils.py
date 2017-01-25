@@ -35,7 +35,9 @@ def get_movie_information(movie):
 def load_movies(seen_path, watchlist_path):
     movies = []
     _id = 1
-    if not os.path.isdir(seen_path) or not os.path.isdir(watchlist_path):
+    if (seen_path is not None and not os.path.isdir(seen_path)) \
+            and \
+            (watchlist_path is not None and not os.path.isdir(watchlist_path)):
         raise FileNotFoundError
     if seen_path is not None:
         for genre in os.listdir(seen_path):
