@@ -48,7 +48,7 @@ def parse_args(args):
 
 def parse_ls(args):
     parser = argparse.ArgumentParser("ls")
-    parser.add_argument("-t", "--type", dest="type", help="movie type", choices=['seen', 'watchlist'],
+    parser.add_argument("-t", "--type", dest="type", help="movie type", choices=[TYPE_SEEN, TYPE_WATCHLIST],
                         type=str)
     parser.add_argument("--min-rating", dest="min_rating", help="the minimum rating of the movie", choices=range(0, 11),
                         default=0, type=int)
@@ -187,6 +187,15 @@ class Cli(Cmd):
             persist_object(self.data_file, self.all_movies)
         except FileNotFoundError:
             print("Error - Please make sure that the directories you specified actually exist")
+
+    def do_summary(self, line):
+        """summary
+        Returns a summary of the current movie database
+        """
+        nb_total = len(self.all_movies)
+        nb_seen = len(list(filter(lambda movie: movie.type == TYPE_SEEN, self.all_movies)))
+        nb_watchlist = len(list(filter(lambda movie: movie.type == TYPE_WATCHLIST, self.all_movies)))
+        print("Total number of movies {}\nSeen: {}, Watchlist: {}".format(nb_total, nb_seen, nb_watchlist))
 
     def do_cls(self, line):
         """cls

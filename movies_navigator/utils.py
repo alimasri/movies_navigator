@@ -7,7 +7,7 @@ import pickle
 
 from imdbpie import Imdb
 
-from movies_navigator.movie import Movie
+from movies_navigator.movie import Movie, TYPE_SEEN, TYPE_WATCHLIST
 
 from colorama import init, Fore
 
@@ -50,7 +50,7 @@ def load_movies(seen_path, watchlist_path):
                 if movie is None:
                     continue
                 movie.genres = genre.split(",")
-                movie.type = "seen"
+                movie.type = TYPE_SEEN
                 movie.id = _id
                 movie.path = os.path.join(seen_path, genre, movie_folder)
                 _id += 1
@@ -65,7 +65,7 @@ def load_movies(seen_path, watchlist_path):
                 movie = parse_info_file(os.path.join(watchlist_path, genre, movie_folder, INFO_FILE))
                 if movie is None:
                     continue
-                movie.type = "watchlist"
+                movie.type = TYPE_WATCHLIST
                 movie.genres = genre.split(",")
                 movie.id = _id
                 movie.path = os.path.join(watchlist_path, genre, movie_folder)
@@ -114,7 +114,7 @@ def parse_info_file(info):
 def print_movies(movies):
     for movie in movies:
         info = str(movie)
-        if movie.type == 'seen':
+        if movie.type == TYPE_SEEN:
             print(Fore.RED + info)
         else:
             print(Fore.GREEN + info)
@@ -130,9 +130,9 @@ def get_movie_by_id(movies, id):
 def move_movie(movie, seen_path, watchlist_path):
     if movie is None:
         return
-    if movie.type == "seen":
+    if movie.type == TYPE_SEEN:
         destination_root = watchlist_path
-    elif movie.type == "watchlist":
+    elif movie.type == TYPE_WATCHLIST:
         destination_root = seen_path
     else:
         raise Exception("Unable to move - unknown movie type")
@@ -140,7 +140,7 @@ def move_movie(movie, seen_path, watchlist_path):
         destination_path = os.path.join(destination_root, ",".join(movie.genres), os.path.basename(movie.path))
         shutil.move(movie.path, destination_path)
         movie.path = destination_path
-        movie.type = "watchlist" if movie.type == "seen" else "seen"
+        movie.type = TYPE_WATCHLIST if movie.type == TYPE_SEEN else TYPE_SEEN
     except Exception as e:
         raise e
 

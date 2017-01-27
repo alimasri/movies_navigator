@@ -1,3 +1,7 @@
+TYPE_SEEN = "seen"
+TYPE_WATCHLIST = "watchlist"
+
+
 class Movie:
     def __init__(self):
         self.title = ""
