@@ -5,15 +5,12 @@ import platform
 import subprocess
 import pickle
 
-from imdbpie import Imdb
-
 from movies_navigator.movie import Movie, TYPE_SEEN, TYPE_WATCHLIST
 
 from colorama import init, Fore
 
 init(autoreset=True)
 
-imdb = Imdb()
 INFO_FILE = "info.txt"
 
 if sys.version[0] == "3":
