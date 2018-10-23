@@ -29,45 +29,39 @@ def get_movie_information(movie):
                                        movie.plot))
 
 
+def load_movie(movie_path, movie_id, movie_type):
+    if not os.path.isdir(movie_path):
+        return None
+    movie = parse_info_file(os.path.join(movie_path, INFO_FILE))
+    if movie is None:
+        return None
+    movie.type = movie_type
+    movie.id = movie_id
+    movie.path = movie_path
+    return movie
+
+
 def load_movies(seen_path, watchlist_path):
     movies = []
-    _id = 1
+    movie_id = 1
     if (seen_path is not None and not os.path.isdir(seen_path)) \
             and \
             (watchlist_path is not None and not os.path.isdir(watchlist_path)):
         raise FileNotFoundError
     if seen_path is not None and os.path.isdir(seen_path):
-        for genre in os.listdir(seen_path):
-            genre_path = os.path.join(seen_path, genre)
-            # skip non dir files
-            if not os.path.isdir(genre_path):
+        for movie_folder in os.listdir(seen_path):
+            movie_path = os.path.join(seen_path, movie_folder)
+            movie = load_movie(movie_path, movie_id, TYPE_SEEN)
+            if movie is None:
                 continue
-            for movie_folder in os.listdir(genre_path):
-                movie = parse_info_file(os.path.join(seen_path, genre, movie_folder, INFO_FILE))
-                if movie is None:
-                    continue
-                movie.genres = genre.split(",")
-                movie.type = TYPE_SEEN
-                movie.id = _id
-                movie.path = os.path.join(seen_path, genre, movie_folder)
-                _id += 1
-                movies.append(movie)
+            movie_id += 1
+            movies.append(movie)
     if watchlist_path is not None and os.path.isdir(watchlist_path):
-        for genre in os.listdir(watchlist_path):
-            genre_path = os.path.join(watchlist_path, genre)
-            # skip non dir files
-            if not os.path.isdir(genre_path):
-                continue
-            for movie_folder in os.listdir(genre_path):
-                movie = parse_info_file(os.path.join(watchlist_path, genre, movie_folder, INFO_FILE))
-                if movie is None:
-                    continue
-                movie.type = TYPE_WATCHLIST
-                movie.genres = genre.split(",")
-                movie.id = _id
-                movie.path = os.path.join(watchlist_path, genre, movie_folder)
-                _id += 1
-                movies.append(movie)
+        for movie_folder in os.listdir(watchlist_path):
+            movie_path = os.path.join(watchlist_path, movie_folder)
+            movie = load_movie(movie_path, movie_id, TYPE_WATCHLIST)
+            movie_id += 1
+            movies.append(movie)
     return movies
 
 
@@ -102,6 +96,8 @@ def parse_info_file(info):
                 movie.runtime = value
             elif key.startswith('plot'):
                 movie.plot = value
+            elif key.startswith('genres'):
+                movie.genres = value.split(' ')
         f.close()
         return movie
     except:
@@ -134,7 +130,7 @@ def move_movie(movie, seen_path, watchlist_path):
     else:
         raise Exception("Unable to move - unknown movie type")
     try:
-        destination_path = os.path.join(destination_root, ",".join(movie.genres), os.path.basename(movie.path))
+        destination_path = os.path.join(destination_root, os.path.basename(movie.path))
         shutil.move(movie.path, destination_path)
         movie.path = destination_path
         movie.type = TYPE_WATCHLIST if movie.type == TYPE_SEEN else TYPE_SEEN

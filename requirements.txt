@@ -1,9 +1,2 @@
 colorama
 fuzzywuzzy
-imdbpie
-guessit
-requests
-# Add your requirements here like:
-# numpy
-# scipy>=0.9
-
